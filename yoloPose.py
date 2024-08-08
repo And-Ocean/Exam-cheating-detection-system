@@ -3,8 +3,11 @@ from torch import *
 
 model = YOLO("yolov8n-pose.pt")
 
-results = model(source="src\\mp4\\test4.mp4", 
+results = model(source=0, 
             conf = 0.5,
             show=True, 
-            save_txt=True,
-            save_frames = True)
+            # save_txt=True,
+            save_txt=False,
+            stream=True)
+
+
