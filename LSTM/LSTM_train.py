@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Masking
+from tensorflow.keras.layers import LSTM, Dense, Masking, Bidirectional
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 
@@ -27,9 +27,8 @@ def load_data(data_dir):
                     labels.append(0)  # 正常行为
     return sequences, labels
 
-data_dir = 'runs\pose\predict2\labels'
+data_dir = 'E:/video1'
 sequences, labels = load_data(data_dir)
-
 
 # 序列填充
 max_sequence_length = max(len(seq) for seq in sequences)
@@ -46,11 +45,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 X = tf.convert_to_tensor(X, dtype=tf.float32)
 y = tf.convert_to_tensor(y, dtype=tf.float32)
 
-# 构建LSTM模型
+# 构建双向LSTM模型
 model = Sequential()
-model.add(Masking(mask_value=0.0, input_shape=(max_sequence_length, 51)))  # 51是关键点坐标的维数（3*17）
-model.add(LSTM(100))
-model.add(Dense(1, activation='sigmoid'))
+model.add(Masking(mask_value=0.0, input_shape=(max_sequence_length, 51)))
+model.add(Bidirectional(LSTM(100)))
+model.add(Dense(1, activation='tanh'))
 
 # 编译模型
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -63,4 +62,4 @@ loss, accuracy = model.evaluate(X_test, y_test)
 print(f'Test Accuracy: {accuracy}')
 
 # 保存模型
-model.save('LSTM/my_lstm_model')
+model.save('LSTM/my_bidirectional_lstm_model')

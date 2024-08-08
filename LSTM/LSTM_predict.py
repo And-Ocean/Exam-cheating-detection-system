@@ -22,7 +22,7 @@ def load_data_for_prediction(data_dir):
     return sequences, file_names
 
 # 加载新的数据
-data_dir = 'E:\\Exam-cheating-detection-system\\Exam-cheating-detection-system\\runs\\pose\\predict4\\labels'  # 替换为你的新TXT文件目录
+data_dir = 'E:/video1.1'  
 new_sequences, new_file_names = load_data_for_prediction(data_dir)
 
 # 序列填充
@@ -33,14 +33,14 @@ new_sequences_padded = pad_sequences(new_sequences, maxlen=max_sequence_length, 
 X_new = tf.convert_to_tensor(new_sequences_padded, dtype=tf.float32)
 
 # 加载训练好的模型
-model = tf.keras.models.load_model('LSTM\\my_lstm_model')  # 替换为你保存模型的路径
+model = tf.keras.models.load_model('E:/Exam-cheating-detection-system/Exam-cheating-detection-system/LSTM/my_bidirectional_lstm_model') 
 
 # 使用模型进行预测
 predictions = model.predict(X_new)
 
 # 解释预测结果
 for filename, prediction in zip(new_file_names, predictions):
-    if prediction >= 0.5:
+    if prediction >= 0.2:
         print(f'{filename}: 异常行为')
     else:
         print(f'{filename}: 正常行为')

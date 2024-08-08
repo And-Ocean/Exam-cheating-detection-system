@@ -18,7 +18,7 @@ def is_abnormal_frame(frame_number, abnormal_ranges):
 
 def rename_files(data_dir, abnormal_ranges):
     for filename in os.listdir(data_dir):
-        if filename.endswith('.txt') and filename.startswith('test4_'):
+        if filename.endswith('.txt') and filename.startswith('test2_'):
             # 提取帧序号
             frame_number_str = filename.split('_')[1].split('.')[0]
             frame_number = int(frame_number_str)
@@ -27,10 +27,10 @@ def rename_files(data_dir, abnormal_ranges):
             is_abnormal, abnormal_frame_number = is_abnormal_frame(frame_number, abnormal_ranges)
             if is_abnormal:
                 # 异常行为帧
-                new_filename = f'frame_{frame_number_str.zfill(4)}_abnormal_{str(abnormal_frame_number).zfill(4)}.txt'
+                new_filename = f'frame_{frame_number_str.zfill(5)}_abnormal_{str(abnormal_frame_number).zfill(4)}.txt'
             else:
                 # 正常行为帧
-                new_filename = f'frame_{frame_number_str.zfill(4)}_normal.txt'
+                new_filename = f'frame_{frame_number_str.zfill(5)}_normal.txt'
             
             # 重命名文件
             old_filepath = os.path.join(data_dir, filename)
@@ -42,7 +42,7 @@ def rename_files(data_dir, abnormal_ranges):
 abnormal_ranges = get_abnormal_ranges()
 
 # 文件目录路径
-data_dir = 'runs/pose/predict4/labels'
+data_dir = 'runs\pose\predict\labels'
 
 # 重命名文件
 rename_files(data_dir, abnormal_ranges)
