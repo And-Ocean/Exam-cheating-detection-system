@@ -88,9 +88,9 @@ predicted_labels = (torch.sigmoid(predictions) > 0.5).float()
 accuracy = (predicted_labels == true_labels).sum().item() / true_labels.size(0)
 print(f'Accuracy: {accuracy:.4f}')
 
-# 解释预测结果
-for filename, prediction in zip(new_file_names, predictions):
-    if torch.sigmoid(prediction) >= 0.5:
-        print(f'{filename}: 异常行为')
-    else:
-        print(f'{filename}: 正常行为')
+# # 解释预测结果
+# for filename, prediction in zip(new_file_names, predictions):
+#     if torch.sigmoid(prediction) >= 0.5:
+#         print(f'{filename}: 异常行为')
+#     else:
+#         print(f'{filename}: 正常行为')
