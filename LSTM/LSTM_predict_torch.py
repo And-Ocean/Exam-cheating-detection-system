@@ -29,7 +29,8 @@ data_dir = 'E:/video2'
 new_sequences, new_file_names = load_data_for_prediction(data_dir)
 
 # 序列填充
-new_sequences_padded = pad_sequence([torch.tensor(seq, dtype=torch.float32) for seq in new_sequences], batch_first=True, padding_value=0.0)
+new_sequences_padded = pad_sequence([torch.tensor(seq, dtype=torch.float32) for seq in new_sequences], 
+                                    batch_first=True, padding_value=0.0)
 
 # 转换为PyTorch张量
 X_new = new_sequences_padded

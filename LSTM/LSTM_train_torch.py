@@ -6,6 +6,33 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from sklearn.model_selection import train_test_split
 
+from ultralytics import YOLO 
+from torch import *
+
+# model = YOLO("YOLO\yolov8n-pose.pt")
+
+# results = model(source='E:/video1/video1.mp4', 
+#             conf=0.5,
+#             iou=0.6,
+#             # 减少重复检测
+#             half=True,
+#             # 半精度推理，GPU加速
+#             device=0,
+#             stream_buffer=False,
+#             # 在处理视频流时应该缓存所有帧
+#             visualize=False,
+
+#             show=True,
+#             save=False,
+#             save_frames=False,
+#             save_txt=False,
+#             save_conf=False,
+#             show_labels=True,
+#             show_conf=True,
+#             show_boxes=True,
+#             )
+
+
 # 读取和解析数据
 def load_data(data_dir):
     sequences = []
@@ -15,12 +42,12 @@ def load_data(data_dir):
             filepath = os.path.join(data_dir, filename)
             with open(filepath, 'r') as file:
                 lines = file.readlines()
-                sequence = []
-                for line in lines:
-                    values = list(map(float, line.strip().split()))
-                    keypoints = values[5:]  # 关键点坐标
-                    sequence.append(keypoints)
-                sequences.append(sequence)
+                # sequence = []
+                # for line in lines:
+                #     values = list(map(float, line.strip().split()))
+                #     keypoints = values[5:]  # 关键点坐标
+                #     sequence.append(keypoints)
+                # sequences.append(sequence)
                 if 'abnormal' in filename:
                     labels.append(1)  # 异常行为
                 else:

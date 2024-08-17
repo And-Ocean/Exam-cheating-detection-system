@@ -6,10 +6,9 @@ from torch.nn.utils.rnn import pad_sequence
 from ultralytics import YOLO
 from sklearn.metrics import accuracy_score
 
-# 定义YOLO模型并获取实时关键点数据
-model_yolo = YOLO("yolov8n-pose.pt")
+# 初始化 YOLO 模型
+model_yolo = YOLO("YOLO/yolov8n-pose.pt")
 
-# 定义LSTM模型架构（与训练时相同）
 class BiLSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(BiLSTMModel, self).__init__()
@@ -19,93 +18,67 @@ class BiLSTMModel(nn.Module):
         self.tanh = nn.Tanh()
         
     def forward(self, x):
-        h0 = torch.zeros(2 * 1, x.size(0), self.hidden_size).to(x.device)  # 2 for bidirection
-        c0 = torch.zeros(2 * 1, x.size(0), self.hidden_size).to(x.device)
+        h0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device) 
+        c0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device)
         out, _ = self.lstm(x, (h0, c0))
-        out = out[:, -1, :]
-        out = self.fc(out)
-        out = self.tanh(out)
+        
+        # 只取最后一个时间步的输出
+        out = out[:, -1, :]  # 形状为 (batch_size, hidden_size * 2)
+        out = self.fc(out)   # 形状为 (batch_size, output_size)
+        out = self.tanh(out) # 形状为 (batch_size, output_size)
         return out
 
-input_size = 51
+
+# 模型参数
+input_size = 34  
 hidden_size = 100
 output_size = 1
+
+# 加载 BiLSTM 模型
 model_lstm = BiLSTMModel(input_size, hidden_size, output_size)
+model_lstm.load_state_dict(torch.load('LSTM/my_bidirectional_lstm_model.pth'))
 
-# 加载训练好的模型权重
-model_lstm.load_state_dict(torch.load('E:/Exam-cheating-detection-system/Exam-cheating-detection-system/LSTM/my_bidirectional_lstm_model.pth'))
-
-# 使用GPU（如果可用）
+# 将模型放入 GPU (如果可用)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_lstm.to(device)
 
-# 准备实时数据流
+# 存储关键点序列
 sequences = []
-max_sequence_length = 100  # 假设一个合理的最大序列长度
-stream = model_yolo(source=0, conf=0.5, show=True, save_txt=False, stream=True)
+max_sequence_length = 19  
 
-# 从YOLO模型获取实时关键点数据
+# 实时获取视频关键点
+stream = model_yolo(source=0, 
+            conf=0.5,
+            iou=0.6,
+            half=True,
+            device=0,
+            stream_buffer=False,
+            visualize=False,
+            show=True,
+            save=False,
+            stream=True
+            )
+
+# 处理每一帧视频
 for result in stream:
-    keypoint = result.keypoints
+    keypoint = result.keypoints.xyn.cpu().numpy()
     if keypoint is not None:
-
-        keypoint = keypoint[0]  # 假设只有一个对象
-        sequences.append(keypoint)
+        sequences.append(keypoint.flatten())
         if len(sequences) > max_sequence_length:
-            sequences.pop(0)  # 保持序列长度不超过最大值
+            sequences.pop(0)
 
-        # 当序列长度达到最大值时，进行预测
         if len(sequences) == max_sequence_length:
-            sequence_tensor = torch.tensor(sequences, dtype=torch.float32).unsqueeze(0).to(device)  # 增加batch维度
+            sequence_tensor = torch.tensor(sequences, dtype=torch.float32).unsqueeze(0).to(device)
 
-            # 使用LSTM模型进行预测
             model_lstm.eval()
             with torch.no_grad():
-                prediction = model_lstm(sequence_tensor).squeeze()
-            
-            # 打印预测结果
+                prediction = model_lstm(sequence_tensor).squeeze()  # 输出形状应为 (1,)
+
             predicted_label = (torch.sigmoid(prediction) > 0.5).float()
+
             if predicted_label.item() == 1:
-                print("异常行为")
+                print("异常行为检测到")
             else:
-                print("正常行为")
+                print("行为正常")
 
-            sequences = []  # 重置序列以开始新的检测周期
-
-# # 读取真实标签（用于评估准确度）
-# def load_true_labels(labels_file):
-#     with open(labels_file, 'r') as file:
-#         labels = [int(line.strip()) for line in file]
-#     return labels
-
-# labels_file = 'E:/video2/label/target2.txt'
-# true_labels = load_true_labels(labels_file)
-# true_labels = torch.tensor(true_labels, dtype=torch.float32).to(device)
-
-# # 计算准确度（仅在测试数据上）
-# def evaluate_model(true_labels, predictions):
-#     accuracy = (true_labels == predictions).sum().item() / true_labels.size(0)
-#     print(f'Accuracy: {accuracy:.4f}')
-
-# # 计算预测准确度（假设有真实标签用于验证）
-# predictions = []
-# for result in stream:
-#     keypoint = result.keypoints
-#     if keypoint is not None:
-#         keypoint = keypoint[0].cpu().numpy()
-#         keypoints = keypoint[5:]
-#         sequences.append(keypoints)
-#         if len(sequences) > max_sequence_length:
-#             sequences.pop(0)
-
-#         if len(sequences) == max_sequence_length:
-#             sequence_tensor = torch.tensor(sequences, dtype=torch.float32).unsqueeze(0).to(device)
-#             model_lstm.eval()
-#             with torch.no_grad():
-#                 prediction = model_lstm(sequence_tensor).squeeze()
-#             predicted_label = (torch.sigmoid(prediction) > 0.5).float()
-#             predictions.append(predicted_label.item())
-#             sequences = []
-
-# predicted_labels = torch.tensor(predictions, dtype=torch.float32).to(device)
-# evaluate_model(true_labels, predicted_labels)
+            sequences = []  # 清空序列以处理下一个窗口
