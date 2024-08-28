@@ -1,5 +1,6 @@
-src/
 runs/
+test/
+src/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
