@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from sklearn.metrics import accuracy_score
 
 # 初始化 YOLO 模型
+# 初始化 YOLO 模型
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")
 
 class BiLSTMModel(nn.Module):
@@ -23,62 +24,89 @@ class BiLSTMModel(nn.Module):
         out, _ = self.lstm(x, (h0, c0))
         
         # 只取最后一个时间步的输出
-        out = out[:, -1, :]  # 形状为 (batch_size, hidden_size * 2)
-        out = self.fc(out)   # 形状为 (batch_size, output_size)
-        out = self.tanh(out) # 形状为 (batch_size, output_size)
+        out = out[:, -1, :]  # 获取最后时间步的输出
+        out = self.fc(out)
+        out = self.tanh(out)
         return out
 
+def detect_abnormal_behavior(source=0):
+    """
+    使用 YOLO 和 BiLSTM 检测视频流中的异常行为。
+    
+    参数:
+        source: 视频源,默认为 0(摄像头)。
+    
+    返回值:
+        bool: 如果检测到异常行为返回 True,否则返回 False。
+    """
+    # 模型参数
+    input_size = 34  
+    hidden_size = 100
+    output_size = 1
+    model_lstm = BiLSTMModel(input_size, hidden_size, output_size)
 
-# 模型参数
-input_size = 34  
-hidden_size = 100
-output_size = 1
+    # 加载模型权重
+    model_lstm.load_state_dict(torch.load('LSTM/bidirectional_lstm_model.pth'))
 
-# 加载 BiLSTM 模型
-model_lstm = BiLSTMModel(input_size, hidden_size, output_size)
-model_lstm.load_state_dict(torch.load('LSTM/my_bidirectional_lstm_model.pth'))
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model_lstm.to(device)
+    
+    # 初始化每个检测到的人的关键点序列
+    person_sequences = {}
+    max_sequence_length = 30
 
-# 将模型放入 GPU (如果可用)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model_lstm.to(device)
+    # 使用 YOLO 模型处理视频流
+    stream = model_yolo(source=source, 
+                        conf=0.5,
+                        iou=0.6,
+                        half=True,
+                        device=0,
+                        stream_buffer=False,
+                        visualize=False,
+                        show=True,
+                        save=False,
+                        stream=True)
 
-# 存储关键点序列
-sequences = []
-max_sequence_length = 19  
+    # 遍历视频流中的每一帧
+    for result in stream:
+        keypoints = result.keypoints  # 检测到的人的关键点数据
 
-# 实时获取视频关键点
-stream = model_yolo(source=0, 
-            conf=0.5,
-            iou=0.6,
-            half=True,
-            device=0,
-            stream_buffer=False,
-            visualize=False,
-            show=True,
-            save=False,
-            stream=True
-            )
+        if len(keypoints) == 0:
+            print("警告: 未检测考生。")
+            continue
 
-# 处理每一帧视频
-for result in stream:
-    keypoint = result.keypoints.xyn.cpu().numpy()
-    if keypoint is not None:
-        sequences.append(keypoint.flatten())
-        if len(sequences) > max_sequence_length:
-            sequences.pop(0)
+        # 检查当前帧中的每个检测到的人
+        for i, keypoint in enumerate(keypoints):
+            keypoint_np = keypoint.xyn.cpu().numpy()  # 获取每个人的关键点数据
 
-        if len(sequences) == max_sequence_length:
-            sequence_tensor = torch.tensor(sequences, dtype=torch.float32).unsqueeze(0).to(device)
+            if keypoint_np is not None:
+                if i not in person_sequences:
+                    person_sequences[i] = []  # 初始化此人的序列
 
-            model_lstm.eval()
-            with torch.no_grad():
-                prediction = model_lstm(sequence_tensor).squeeze()  # 输出形状应为 (1,)
+                # 展平关键点数据并加入对应人的序列
+                person_sequences[i].append(keypoint_np.flatten())
 
-            predicted_label = (torch.sigmoid(prediction) > 0.5).float()
+                # 如果序列长度超过最大限制,则删除最早的帧
+                if len(person_sequences[i]) > max_sequence_length:
+                    person_sequences[i].pop(0)
 
-            if predicted_label.item() == 1:
-                print("异常行为检测到")
-            else:
-                print("行为正常")
+                # 当序列达到最大长度时,进行行为检测
+                if len(person_sequences[i]) == max_sequence_length:
+                    sequence_tensor = torch.tensor(person_sequences[i], dtype=torch.float32).unsqueeze(0).to(device)
 
-            sequences = []  # 清空序列以处理下一个窗口
+                    model_lstm.eval()
+                    with torch.no_grad():
+                        prediction = model_lstm(sequence_tensor)
+
+                        # 输出模型预测结果
+                        predicted_label = (torch.sigmoid(prediction) > 0.5).float().item()
+                        
+                        # 检测完后清空序列
+                        person_sequences[i] = []
+
+                        if predicted_label == 1:
+                            return True  # 检测到异常行为返回 True
+                        else:
+                            return False  # 正常行为返回 False
+
+    return False  # 如果没有检测到任何序列,返回 False
