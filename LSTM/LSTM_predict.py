@@ -5,28 +5,10 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 from ultralytics import YOLO
 from sklearn.metrics import accuracy_score
+from LSTM_model import BiLSTMModel
 
 # 初始化 YOLO 模型
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")
-
-class BiLSTMModel(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(BiLSTMModel, self).__init__()
-        self.hidden_size = hidden_size
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True, bidirectional=True)
-        self.fc = nn.Linear(hidden_size * 2, output_size)
-        self.tanh = nn.Tanh()
-        
-    def forward(self, x):
-        h0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device) 
-        c0 = torch.zeros(2, x.size(0), self.hidden_size).to(x.device)
-        out, _ = self.lstm(x, (h0, c0))
-
-        # 只取最后一个时间步的输出
-        out = out[:, -1, :]  # 获取最后时间步的输出
-        out = self.fc(out)
-        out = self.tanh(out)
-        return out
 
 def detect_abnormal_behavior(source=0):
     """
