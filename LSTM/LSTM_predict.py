@@ -79,9 +79,9 @@ class AbnormalBehaviorDetector:
                             self.person_sequences[i] = []
 
                             if predicted_label == 1:
-                                print(f"Person {i}: 检测到异常行为")
+                                return i, True
                             else:
-                                print(f"Person {i}: 正常行为")
+                                return i, False
 
-        print("视频流检测结束。")
+        return i, False
 
