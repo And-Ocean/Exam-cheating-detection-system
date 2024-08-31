@@ -14,7 +14,7 @@ continue_training = os.path.exists(model_path)
 
 # 关键点坐标获取✓
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")
-results = model_yolo(source='src/splitted/under_table.mp4', 
+results = model_yolo(source='src/splitted/lowering_head.mp4', 
             conf=0.5,
             iou=0.8,
             half=True,
@@ -51,13 +51,20 @@ X = np.array(sequences, dtype=np.float32)
 
 # 标签数据录入✓
 labels = []
-with open("src/splitted/under_table.txt", 'r') as file:
+with open("src/splitted/lowering_head_1.txt", 'r') as file:
     for line in file:
         line_labels = np.array(line.split(), dtype=np.int32)
         for i in range(0, len(line_labels), sequence_length):
             sample_label = line_labels[i:i + sequence_length]
             if len(sample_label) == sequence_length:
                 labels.append(sample_label)
+
+# labels = []
+# with open("src/splitted/lowering_head.txt", 'r') as file:
+#     for line in file:
+#         for i in range(0, len(line.split()), sequence_length):
+#             sample_label = np.zeros(sequence_length, dtype=np.int32)  # 创建全0的标签数组
+#             labels.append(sample_label)
 
 y = np.array(labels, dtype=np.float32)
 

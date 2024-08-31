@@ -61,6 +61,11 @@ class Ui_MainWindow(object):
         self.pushButton_4.setGeometry(QtCore.QRect(50, 320, 141, 31))
         self.pushButton_4.setObjectName("pushButton_4")
 
+        self.label_5 = QtWidgets.QLabel(self.centralwidget)
+        self.label_5.setGeometry(QtCore.QRect(60, 480, 101, 20))
+        self.label_5.setObjectName("label_5")
+
+
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -95,6 +100,8 @@ class Ui_MainWindow(object):
         self.lineEdit.setText(_translate("MainWindow", "请输入文件地址/流地址"))  # Changed QLabel to QLineEdit
         self.label_3.setText(_translate("MainWindow", "当前正在播放："))
         self.pushButton_4.setText(_translate("MainWindow", "确定"))
+        self.label_5.setText(_translate("MainWindow", "作弊检测状态："))
+
 
     def showLineEditText(self):
         self.address = self.lineEdit.text()
