@@ -5,10 +5,11 @@ from PyQt5 import QtCore, QtWidgets,QtGui
 from PyQt5.QtGui import QImage, QPixmap,QPainter,QPalette,QBrush
 from PyQt5.QtCore import QTimer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from producer import VideoProducer
+from interface.producer import VideoProducer
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLCDNumber, QSlider,
                              QLabel,QMenuBar,QStatusBar, QPushButton, QFileDialog, QListWidget,QLineEdit)
+
 class MainWindow(QWidget):
     def __init__(self,*args,**kwargs):
         super(MainWindow,self).__init__(*args,**kwargs)
@@ -57,7 +58,7 @@ padding: 2px;
         self.resize(1200, 800)
 
         palette = QPalette()
-        palette.setBrush(QPalette.Background, QBrush(QPixmap("./background.jpg")))  
+        palette.setBrush(QPalette.Background, QBrush(QPixmap("src/background.jpg")))  
         self.setPalette(palette)
         self.horizontalLayout = QHBoxLayout(self)
         # create buttons
@@ -112,7 +113,7 @@ padding: 2px;
         self.label_1.setFixedHeight(40)
         self.verticalLayout_2.addWidget(self.label_1)
 
-        self.label_3=QLabel("",self.widget_right)
+        self.label_3=QLabel("未检测到考生",self.widget_right)
         self.label_3.setFont(font1)
         self.label_3.setFixedWidth(400)
         self.label_3.setFixedHeight(40)
@@ -141,11 +142,10 @@ padding: 2px;
         self.labelUpadtetimer.start(1000)
     def resizeEvent(self, event):
         self.resizeFlag=1
-        print("Label resized to:", self.videoLabel.width(), self.videoLabel.height())
     def paintEvent(self,event):# set background_img
         painter = QPainter(self)
         painter.drawRect(self.rect())
-        pixmap = QPixmap("./background.jpg")
+        pixmap = QPixmap("src/background.jpg")
         painter.drawPixmap(self.rect(), pixmap)
 
     def chooseFile(self):
@@ -207,6 +207,11 @@ padding: 2px;
         else:
             video_name =self.videoProducer.get_video_name()
         self.label_1.setText("当前正在播放："+video_name)
+    def updateLabel_3(self, detect_state = False):
+        if detect_state == True:
+            self.label_3.setText("检测到作弊行为")
+        else:
+            self.label_3.setText("未发现异常")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

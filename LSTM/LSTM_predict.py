@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 from ultralytics import YOLO
 from sklearn.metrics import accuracy_score
-from LSTM_model import BiLSTMModel
+from LSTM.LSTM_model import BiLSTMModel
 
 # 初始化 YOLO 模型
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")

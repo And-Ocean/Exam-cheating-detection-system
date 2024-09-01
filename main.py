@@ -18,12 +18,20 @@ from sklearn.metrics import accuracy_score
 
 from LSTM.LSTM_predict import detect_abnormal_behavior
 from LSTM.LSTM_model import BiLSTMModel
-from interface.UI import VideoPlayerApp
+from interface.UI import MainWindow
+from interface.producer import *
 
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")
 
-if __name__ == "__main__":
+def main():
     app = QtWidgets.QApplication(sys.argv)
-    UI = VideoPlayerApp()
-    UI.launch()
+    UI = MainWindow()
+    if UI.videoProducer.get_video_name() is not None:
+        src = UI.videoProducer.get_video_name()
+        detect_state = detect_abnormal_behavior(src)
+        UI.updateLabel_3(detect_state)
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main() 
