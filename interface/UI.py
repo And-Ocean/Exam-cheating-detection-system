@@ -140,6 +140,7 @@ padding: 2px;
 
         self.labelUpadtetimer = QtCore.QTimer()
         self.labelUpadtetimer.timeout.connect(self.updateLabel_1)
+        
         self.labelUpadtetimer.start(1000)
     def resizeEvent(self, event):
         self.resizeFlag=1
@@ -168,15 +169,19 @@ padding: 2px;
             self.timer.stop()
             self.pushButton_3.setText('播放')
             self.states=0
+            self.updateLabel_3()
         else:
             self.timer.start(30)  # Update every 30 ms
             self.pushButton_3.setText('暂停')
             self.staets=1
+            self.updateLabel_3()
+
     def stop(self):
         self.videoProducer = VideoProducer('') 
         self.camera_states=0
         self.states=-1
         self.updateLabel_1()
+        self.updateLabel_3()
     def update_frame(self):
         # 获取视频帧
         frame = self.videoProducer.get_frame()
@@ -208,6 +213,7 @@ padding: 2px;
             video_name =self.videoProducer.get_video_name()
         self.label_1.setText("当前正在播放："+video_name)
     def updateLabel_3(self, detect_state=False):
+        self.detect_state = detect_abnormal_behavior(0)
         if detect_state:
             self.label_3.setText("检测到作弊行为")
         else:
