@@ -26,12 +26,7 @@ model_yolo = YOLO("YOLO/yolov8n-pose.pt")
 def main():
     app = QtWidgets.QApplication(sys.argv)
     UI = MainWindow()
-    if UI.videoProducer.get_video_name() is not None:
-        src = UI.videoProducer.get_video_name()
-        detect_state = detect_abnormal_behavior(src)
-        UI.updateLabel_3(detect_state)
     sys.exit(app.exec_())
-
 
 if __name__ == "__main__":
     main() 

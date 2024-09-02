@@ -52,10 +52,6 @@ def detect_abnormal_behavior(source=0):
     for result in stream:
         keypoints = result.keypoints  # 检测到的人的关键点数据
 
-        if len(keypoints) == 0:
-            print("警告: 未检测考生。")
-            continue
-
         # 检查当前帧中的每个检测到的人
         for i, keypoint in enumerate(keypoints):
             keypoint_np = keypoint.xyn.cpu().numpy()  # 获取每个人的关键点数据

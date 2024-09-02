@@ -5,10 +5,12 @@ from PyQt5 import QtCore, QtWidgets,QtGui
 from PyQt5.QtGui import QImage, QPixmap,QPainter,QPalette,QBrush
 from PyQt5.QtCore import QTimer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from interface.producer import VideoProducer
+from producer import VideoProducer
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLCDNumber, QSlider,
                              QLabel,QMenuBar,QStatusBar, QPushButton, QFileDialog, QListWidget,QLineEdit)
+# from ..LSTM.LSTM_model import BiLSTMModel
+# from ..LSTM.LSTM_predict import detect_abnormal_behavior
 
 class MainWindow(QWidget):
     def __init__(self,*args,**kwargs):
@@ -147,7 +149,6 @@ padding: 2px;
         painter.drawRect(self.rect())
         pixmap = QPixmap("src/background.jpg")
         painter.drawPixmap(self.rect(), pixmap)
-
     def chooseFile(self):
         url = QFileDialog.getOpenFileUrls()[0]
         file_url = [item.toLocalFile() for item in url][0]
@@ -208,10 +209,12 @@ padding: 2px;
             video_name =self.videoProducer.get_video_name()
         self.label_1.setText("当前正在播放："+video_name)
     def updateLabel_3(self, detect_state = False):
-        if detect_state == True:
-            self.label_3.setText("检测到作弊行为")
-        else:
-            self.label_3.setText("未发现异常")
+        if self.camera_states==1 or self.staets==1:
+            self.detect_state = detect_abnormal_behavior(self.videoProducer.get_video_name())
+            if detect_state == True:
+                self.label_3.setText("检测到作弊行为")
+            else:
+                self.label_3.setText("未发现异常")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
