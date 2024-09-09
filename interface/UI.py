@@ -213,7 +213,7 @@ padding: 2px;
         self.label_1.setText("当前正在播放："+video_name)
     def updateLabel_3(self):
         while self.states == 1:
-            self.detect_state = detect_abnormal_behavior("src\splitted\deliver_back_left2.mp4")
+            self.detect_state = detect_abnormal_behavior("")
             if self.detect_state:
                 self.label_3.setStyleSheet("color: red;") 
                 self.label_3.setText("检测到作弊行为")

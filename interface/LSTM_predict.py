@@ -89,5 +89,3 @@ def detect_abnormal_behavior(source=0):
 
     return False  # 如果没有检测到任何序列,返回 False
 
-
-detect_abnormal_behavior("src\splitted\head_left_back.mp4")
