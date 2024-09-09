@@ -44,7 +44,7 @@ def detect_abnormal_behavior(source=0):
                         device=0,
                         stream_buffer=False,
                         visualize=False,
-                        show=True,
+                        show=False,
                         save=False,
                         stream=True)
 
@@ -82,8 +82,12 @@ def detect_abnormal_behavior(source=0):
                         person_sequences[i] = []
 
                         if predicted_label == 1:
+                            print("1")
                             return True  # 检测到异常行为返回 True
                         else:
                             return False  # 正常行为返回 False
 
     return False  # 如果没有检测到任何序列,返回 False
+
+
+detect_abnormal_behavior("src\splitted\head_left_back.mp4")

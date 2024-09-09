@@ -164,7 +164,7 @@ padding: 2px;
             self.timer.start(30)
             self.camera_states=1
             self.states=1
-    def startVideo(self):
+    def startVideo(self): 
         if self.pushButton_3.text() == '暂停':
             self.timer.stop()
             self.pushButton_3.setText('播放')
@@ -175,7 +175,6 @@ padding: 2px;
             self.pushButton_3.setText('暂停')
             self.staets=1
             self.updateLabel_3()
-
     def stop(self):
         self.videoProducer = VideoProducer('') 
         self.camera_states=0
@@ -212,15 +211,22 @@ padding: 2px;
         else:
             video_name =self.videoProducer.get_video_name()
         self.label_1.setText("当前正在播放："+video_name)
-    def updateLabel_3(self, detect_state=False):
-        self.detect_state = detect_abnormal_behavior(0)
-        if detect_state:
-            self.label_3.setText("检测到作弊行为")
-        else:
-            self.label_3.setText("未发现异常")
+    def updateLabel_3(self):
+        while self.states == 1:
+            self.detect_state = detect_abnormal_behavior("src\splitted\deliver_back_left2.mp4")
+            if self.detect_state:
+                self.label_3.setStyleSheet("color: red;") 
+                self.label_3.setText("检测到作弊行为")
+            else:
+                self.label_3.setStyleSheet("color: black;") 
+                self.label_3.setText("未发现异常")
+
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     mainWindow = MainWindow()
-    sys.exit(app.exec_())
+    while True:
+        mainWindow.update_frame()
+        mainWindow.updateLabel_3()
+        sys.exit(app.exec_())

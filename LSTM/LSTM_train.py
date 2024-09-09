@@ -4,17 +4,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from sklearn.model_selection import train_test_split
-from ultralytics import YOLO 
+import matplotlib.pyplot as plt  # 引入 matplotlib
+from ultralytics import YOLO
 from LSTM_model import BiLSTMModel
 
 # 检查是否有之前保存的模型文件
-model_path = 'LSTM/bidirectional_lstm_model.pth'
+model_path = 'LSTM/my_bidirectional_lstm_model.pth'
 continue_training = os.path.exists(model_path)
 
 # 关键点坐标获取✓
 model_yolo = YOLO("YOLO/yolov8n-pose.pt")
-results = model_yolo(source='src/splitted/lowering_head.mp4', 
+results = model_yolo(source="src\splitted\deliver_back_left1.mp4", 
             conf=0.5,
             iou=0.8,
             half=True,
@@ -51,20 +51,13 @@ X = np.array(sequences, dtype=np.float32)
 
 # 标签数据录入✓
 labels = []
-with open("src/splitted/lowering_head_1.txt", 'r') as file:
+with open("src\splitted\deliver_back_left1.txt", 'r') as file:
     for line in file:
         line_labels = np.array(line.split(), dtype=np.int32)
         for i in range(0, len(line_labels), sequence_length):
             sample_label = line_labels[i:i + sequence_length]
             if len(sample_label) == sequence_length:
                 labels.append(sample_label)
-
-# labels = []
-# with open("src/splitted/lowering_head.txt", 'r') as file:
-#     for line in file:
-#         for i in range(0, len(line.split()), sequence_length):
-#             sample_label = np.zeros(sequence_length, dtype=np.int32)  # 创建全0的标签数组
-#             labels.append(sample_label)
 
 y = np.array(labels, dtype=np.float32)
 
@@ -95,7 +88,11 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model.to(device)
 
-num_epochs = 20
+# 存储每个 epoch 的损失和准确率
+train_losses = []
+accuracies = []
+
+num_epochs = 10
 for epoch in range(num_epochs):
     model.train()
     total_loss = 0.0
@@ -109,22 +106,48 @@ for epoch in range(num_epochs):
         total_loss += loss.item()
 
     avg_loss = total_loss / len(loader)
+    train_losses.append(avg_loss)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.4f}')
 
     # 保存模型
     torch.save(model.state_dict(), model_path)
     print("Model saved to", model_path)
 
-# 评估模型
-model.eval()
-with torch.no_grad():
-    correct = 0
-    total = 0
-    for X_batch, y_batch in loader:
-        X_batch, y_batch = X_batch.to(device), y_batch.to(device)
-        outputs = model(X_batch)
-        predicted = (torch.sigmoid(outputs.squeeze()) > 0.5).float()
-        total += y_batch.size(0)
-        correct += (predicted == y_batch).sum().item()
-    accuracy = correct / total
-    print(f'Final Accuracy: {accuracy:.4f}')
+    # 评估模型
+    model.eval()
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for X_batch, y_batch in loader:
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            outputs = model(X_batch)
+            predicted = (torch.sigmoid(outputs.squeeze()) > 0.5).float()
+            total += y_batch.size(0)
+            correct += (predicted == y_batch).sum().item()
+        accuracy = correct / total
+        accuracies.append(accuracy)
+        print(f'Accuracy: {accuracy:.4f}')
+
+# 训练结束后可视化损失和准确率
+epochs = range(1, num_epochs + 1)
+
+plt.figure(figsize=(12, 6))
+
+# 绘制损失曲线
+plt.subplot(1, 2, 1)
+plt.plot(epochs, train_losses, 'b-', label='Training Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.title('Training Loss Over Epochs')
+plt.legend()
+
+# 绘制准确率曲线
+plt.subplot(1, 2, 2)
+plt.plot(epochs, accuracies, 'g-', label='Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.title('Accuracy Over Epochs')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
